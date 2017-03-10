@@ -1,13 +1,3 @@
-buildscript {
-    dependencies {
-        classpath "org.scala-lang:scala-library:2.12.1"
-        classpath "org.scala-lang:scala-compiler:2.12.1"
-    }
-    repositories {
-        mavenCentral()
-    }
-}
-
 apply plugin: 'scala'
 
 repositories {
@@ -16,19 +6,15 @@ repositories {
 
 dependencies {
     compile 'org.scala-lang:scala-library:2.12.1'
-    compile "org.scala-lang:scala-compiler:2.12.1"
+    compileOnly "org.scala-lang:scala-compiler:2.12.1"
     compile 'com.typesafe.akka:akka-http_2.12:10.0.3'
     compile 'com.typesafe.akka:akka-contrib_2.12:2.4.17'
+    compile "com.typesafe.akka:akka-cluster_2.12:2.4.17"
+    compile "com.typesafe.akka:akka-persistence_2.12:2.4.17"
+    compile "org.iq80.leveldb:leveldb:0.7"
+    compile "org.fusesource.leveldbjni:leveldbjni-all:1.8"
     compile "org.skinny-framework:skinny-http-client_2.12:2.3.5"
     compile 'ch.qos.logback:logback-classic:1.2.1'
 }
 
-task printClasspath {
-    def scalaPath = buildscript.configurations.classpath.find {
-        it.name == "scala-compiler-2.12.1.jar"
-    }
-    def classpath = sourceSets.main.runtimeClasspath.asPath
-    doLast {
-        println "${scalaPath}:${classpath}"
-    }
-}
+apply from: "gradle/scala-repl.gradle"

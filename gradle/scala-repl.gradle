@@ -1,0 +1,37 @@
+configurations {
+    scalaRepl
+}
+
+dependencies {
+    scalaRepl "org.scala-lang:scala-library:2.12.1"
+    scalaRepl "org.scala-lang:scala-compiler:2.12.1"
+}
+
+/**
+ * run:
+ * $ ./repl.sh -i repl.scala
+ */
+task repl {
+    doLast {
+        def classpaths = [
+                configurations.scalaRepl,
+                sourceSets.main.runtimeClasspath,
+        ]
+        def script = """\
+#!/bin/bash
+./gradlew compileScala --quiet && \\
+java -Dscala.usejavacp=true \\
+     -classpath "${classpaths*.asPath.join(":")}" \\
+     scala.tools.nsc.MainGenericRunner \\
+     \$@
+"""
+
+        file("$projectDir/repl.sh").text = script
+    }
+}
+
+task replExecPermission(type: Exec) {
+    commandLine 'chmod', '+x', "$projectDir/repl.sh"
+}
+
+repl.finalizedBy replExecPermission

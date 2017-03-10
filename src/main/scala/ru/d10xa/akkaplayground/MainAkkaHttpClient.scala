@@ -64,7 +64,7 @@ object MainAkkaHttpClient {
     val port = config.getInt("sleep-server.port")
     val url = s"http://localhost:$port/sleep"
 
-    val system = ActorSystem("skinny-system")
+    val system = ActorSystem("akka-client-system")
 
     val httpActor = system.actorOf(Props(new HttpActor(url)))
     val throttler = system.actorOf(Props(
