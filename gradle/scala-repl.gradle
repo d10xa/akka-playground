@@ -7,6 +7,16 @@ dependencies {
     scalaRepl "org.scala-lang:scala-compiler:2.12.1"
 }
 
+task printClasspath {
+    doLast {
+        def classpaths = [
+                configurations.scalaRepl,
+                sourceSets.main.runtimeClasspath,
+        ]
+        println classpaths*.asPath.join(":")
+    }
+}
+
 /**
  * run:
  * $ ./repl.sh -i repl.scala

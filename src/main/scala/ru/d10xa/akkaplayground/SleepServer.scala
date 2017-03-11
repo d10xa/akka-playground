@@ -13,8 +13,8 @@ import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.duration.FiniteDuration
-import scala.io.StdIn
 import concurrent.duration._
+import scala.concurrent.Await
 
 object SleepServer {
 
@@ -27,11 +27,16 @@ object SleepServer {
       case Tick(duration) =>
         context.system.scheduler.scheduleOnce(duration, sender(), Tack)
     }
+
+    override def postStop(): Unit = {
+      println("stop TickScheduler")
+    }
   }
 
   def main(args: Array[String]): Unit = {
     val config = ConfigFactory.load()
     val port = config.getInt("sleep-server.port")
+    val host = config.getString("sleep-server.host")
     implicit val system = ActorSystem("sleep-system")
     implicit val materializer = ActorMaterializer()
     implicit val executionContext = system.dispatcher
@@ -53,12 +58,20 @@ object SleepServer {
         }
       }
 
-    val bindingFuture = Http().bindAndHandle(route, "localhost", port)
+    def shutdownAction(binding: Http.ServerBinding) = {
+      binding.unbind()
+      system.terminate()
+      Await.result(system.whenTerminated, 5.seconds)
+      println("exit ok")
+    }
 
-    println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
-    StdIn.readLine() // let it run until user presses return
-    bindingFuture
-      .flatMap(_.unbind()) // trigger unbinding from the port
-      .onComplete(_ => system.terminate()) // and shutdown when done
+    val bindingFuture =
+      Http().bindAndHandle(route, host, port)
+
+    bindingFuture.foreach { binding =>
+      sys.addShutdownHook(shutdownAction(binding))
+    }
+
+    println(s"Server online at http://$host:$port")
   }
 }
